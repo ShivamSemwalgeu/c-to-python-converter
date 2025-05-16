@@ -11,7 +11,7 @@
 
 // Global variable for tracking indentation in Python code
 int indent_level = 0;
-bool in_for_loop = false;  // Track if we're processing a for loop body
+bool in_for_loop = false;          // Track if we're processing a for loop body
 bool in_array_declaration = false; // Track array declarations
 
 // Print indentation based on current level
@@ -61,17 +61,17 @@ void translate_array_init(char *type, char *decl)
     char name[50], size[50];
     char *bracket = strchr(decl, '[');
     char *equals = strchr(decl, '=');
-    
+
     if (bracket)
     {
         // Extract array name and size
         sscanf(decl, "%[^[][%[^]]", name, size);
         trim(name);
         trim(size);
-        
+
         print_indent();
-      //  printf("%s = [0] * %s  # Array declaration\n", name, size);
-        
+        //  printf("%s = [0] * %s  # Array declaration\n", name, size);
+
         // Handle initialization if present
         if (equals)
         {
@@ -86,7 +86,7 @@ void translate_array_init(char *type, char *decl)
                     strncpy(init_values, curly + 1, len);
                     init_values[len] = '\0';
                     trim(init_values);
-                    
+
                     // Split comma-separated values
                     print_indent();
                     printf("%s = [%s]\n", name, init_values);
@@ -100,7 +100,7 @@ void translate_array_init(char *type, char *decl)
 void translate_array_access(char *line)
 {
     char array_name[50], index[50], value[50];
-    
+
     // Handle assignment to array element (arr[i] = value;)
     if (sscanf(line, "%[^[][%[^]] = %[^;];", array_name, index, value) == 3)
     {
@@ -111,7 +111,7 @@ void translate_array_access(char *line)
         printf("%s[%s] = %s\n", array_name, index, value);
         return;
     }
-    
+
     // Handle reading from array (x = arr[i];)
     if (sscanf(line, "%[^=]= %[^[][%[^]];", value, array_name, index) == 3)
     {
@@ -239,7 +239,7 @@ void translate(char *line)
                 return;
             }
         }
-        
+
         char fmt[256] = {0}, args[256] = {0};
         if (strstr(line, ",") &&
             sscanf(line, "printf(\"%[^\"]\", %[^)]);", fmt, args) == 2)
@@ -292,8 +292,6 @@ void translate(char *line)
         printf("continue\n");
         return;
     }
-    
-  
 
     // Convert for loops
     if (strncmp(line, "for", 3) == 0)
@@ -469,38 +467,33 @@ void translate(char *line)
 }
 
 // Entry point
-int main()
+int main(int argc, char *argv[])
 {
-    const char *code[] = {
-        "#include<stdio.h>",
-        "#include<stdlib.h>",
-        "int main(){",
-        "//hello world printf(hello)",
-        "/*hello world printf(hello)",
-        "hello world printf(hello)*/",
-        "int n1, n2, max, lcm;",
-        "int arr[]={1,2,3,4,5}",
-       // "arr[0]=10;",
-        "printf(\"Enter two positive integers: \" );",
-        "scanf(\"%d %d\", &n1, &n2);",
-        "max = (n1 > n2) ? n1 : n2;",
-        "lcm = max;",
-        "while ((lcm % n1 != 0) || (lcm % n2 != 0)) {",
-        "    lcm += max;",
-        "}",
-        "printf(\"The LCM of %d and %d is %d.\", n1, n2, lcm);",
-        "int i;",
-        "for(i=0;i<3;i++){",
-        "i=i+1;",
-        "}",
-        "return 0;"};
+    FILE *file = NULL;
 
-    int lines = sizeof(code) / sizeof(code[0]);
-    for (int i = 0; i < lines; i++)
+    // If a file is not provided
+    if (argc < 2)
     {
-        char line[256];
-        strcpy(line, code[i]);
+        fprintf(stderr, "Usage: %s <input_file.c>\n", argv[0]);
+        return 1;
+    }
+
+    file = fopen(argv[1], "r");
+    if (!file)
+    {
+        fprintf(stderr, "Error: Cannot open file %s\n", argv[1]);
+        return 1;
+    }
+
+    char line[1024];
+    while (fgets(line, sizeof(line), file))
+    {
+        // Remove trailing newline
+        line[strcspn(line, "\n")] = 0;
         translate(line);
     }
+
+    fclose(file);
+
     return 0;
 }
