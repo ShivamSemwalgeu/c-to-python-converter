@@ -15,8 +15,6 @@ int main()
     printf("The LCM of %d and %d is %d.", n1, n2, lcm);
     int i;
     for (i = 0; i < 3; i++)
-    {
         i = i + 1;
-    }
     return 0;
 }

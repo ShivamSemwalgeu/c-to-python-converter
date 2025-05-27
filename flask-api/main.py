@@ -34,7 +34,7 @@ def translate():
     with open(source_file_path, "w") as source_file:
         source_file.write(code)
 
-    output_file_path = os.path.join(CONVERTED_FOLDER, "program")
+    output_file_path = os.path.join(CONVERTED_FOLDER, "program.py")
 
     try:
         run_proc = subprocess.run(
