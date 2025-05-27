@@ -140,53 +140,58 @@ void translate(char *line)
     {
         return;
     }
-    //pointers
-    char var[100], val[100];
+
+char var[100], val[100]; // for variable names and values
+
 // Pointer simulation
-    // Pointer declaration handling
-    if (strstr(line, "*"))
-    {
-    // Handling pointer declarations like int *pc, c;
-       char var[100];
-       if (sscanf(line, "int *%[^,];", var) == 1) {
-        // Just return without doing anything
-          return;
-       }
+if (strstr(line, "*")) { //line contains '*'
+    
+    char var[100]; 
+
+    // Match pattern: int *<var>;
+    if (sscanf(line, "int *%[^,];", var) == 1) {   // int *pc;
+        return;
     }
-    if (strstr(line, "*") || strstr(line, "&")) {
-      if (sscanf(line, "%[^=]= &%[^;];", var, val) == 2) {
-        trim(var);
+   }
+
+  if(strstr(line, "*") || strstr(line, "&")) { // Handle pointer usage or address-of operator
+
+    // Match: var = &val;
+    if (sscanf(line, "%[^=]= &%[^;];", var, val) == 2) {
+        trim(var); 
         trim(val);
         print_indent();
-        printf("%s = [%s] \n", var, val, val);
+        printf("%s = [%s] \n", var, val); //  pc = [c]
         return;
-       }
+    }
+    // Match: *var = val;
     if (sscanf(line, "*%[^=]=%[^;];", var, val) == 2) {
         trim(var);
         trim(val);
         print_indent();
-        printf("%s[0] = %s\n", var, val);
+        printf("%s[0] = %s\n", var, val); // pc[0] = c
         return;
     }
-    char fmt[256] = {0};
-     if (sscanf(line, "printf(\"%[^\"]\", *%[^)]);", fmt, var) == 2) {
+    char fmt[256] = {0}; // Buffer for format string jaise ki %d,%s
+  
+    // Match: printf("<format>", *<var>);
+    if (sscanf(line, "printf(\"%[^\"]\", *%[^)]);", fmt, var) == 2) {
         trim(fmt);
         trim(var);
-        
-        // Modify the format string from %d to {} for Python
+
+        // Replace C format specifier %d with Python format {}
         for (int i = 0; fmt[i]; i++) {
             if (fmt[i] == '%' && fmt[i + 1] == 'd') {
                 fmt[i++] = '{';
                 fmt[i] = '}';
             }
         }
-        
-        // Translate to Python: print(pc[0])
         print_indent();
-        printf("print(\"%s\".format(%s[0]))\n", fmt, var);
+       // print("{}".format(pc[0]))
+        printf("print(\"%s\".format(%s[0]))\n", fmt, var); 
         return;
     }
-  }
+}
 
 
     // Handle array declarations
