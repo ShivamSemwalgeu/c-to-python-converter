@@ -5,9 +5,9 @@
 */
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
+#include <stdlib.h>   //exit()
 #include <stdbool.h>
-#include <ctype.h>
+#include <ctype.h>     
 
 // Global variable for tracking indentation in Python code
 int indent_level = 0;
@@ -140,6 +140,54 @@ void translate(char *line)
     {
         return;
     }
+    //pointers
+    char var[100], val[100];
+// Pointer simulation
+    // Pointer declaration handling
+    if (strstr(line, "*"))
+    {
+    // Handling pointer declarations like int *pc, c;
+       char var[100];
+       if (sscanf(line, "int *%[^,];", var) == 1) {
+        // Just return without doing anything
+          return;
+       }
+    }
+    if (strstr(line, "*") || strstr(line, "&")) {
+      if (sscanf(line, "%[^=]= &%[^;];", var, val) == 2) {
+        trim(var);
+        trim(val);
+        print_indent();
+        printf("%s = [%s] \n", var, val, val);
+        return;
+       }
+    if (sscanf(line, "*%[^=]=%[^;];", var, val) == 2) {
+        trim(var);
+        trim(val);
+        print_indent();
+        printf("%s[0] = %s\n", var, val);
+        return;
+    }
+    char fmt[256] = {0};
+     if (sscanf(line, "printf(\"%[^\"]\", *%[^)]);", fmt, var) == 2) {
+        trim(fmt);
+        trim(var);
+        
+        // Modify the format string from %d to {} for Python
+        for (int i = 0; fmt[i]; i++) {
+            if (fmt[i] == '%' && fmt[i + 1] == 'd') {
+                fmt[i++] = '{';
+                fmt[i] = '}';
+            }
+        }
+        
+        // Translate to Python: print(pc[0])
+        print_indent();
+        printf("print(\"%s\".format(%s[0]))\n", fmt, var);
+        return;
+    }
+  }
+
 
     // Handle array declarations
     if ((strncmp(line, "int ", 4) == 0 || strncmp(line, "float ", 6) == 0) && strchr(line, '['))
@@ -147,6 +195,9 @@ void translate(char *line)
         char *type = strtok(line, " ");
         char *decl = strtok(NULL, ";");
         if (decl)
+        // aise case nhi hone chaiye   int               // incomplete, no variable name or `;`
+        // int a[5]          // missing semicolon
+        // float             // incomplete
         {
             translate_array_init(type, decl);
         }
@@ -195,6 +246,7 @@ void translate(char *line)
         if (strstr(line, "&") && strstr(line, "["))
         {
             char format[10], array_name[50], index[50];
+            // The sscanf function reads formatted data from a string.
             if (sscanf(line, "scanf(\"%[^\"]\", &%[^[][%[^]]);", format, array_name, index) == 3)
             {
                 print_indent();
@@ -216,7 +268,36 @@ void translate(char *line)
         }
         return;
     }
+    
+    // Convert return statements
+    if (strstr(line, "return "))
+    {
+        char value[50];
+        sscanf(line, "return %[^;];", value);
+        print_indent();
+        printf("return %s\n", value);
+        return;
+    }
 
+    // Convert exit(), break, and continue
+    if (strstr(line, "exit("))
+    {
+        print_indent();
+        printf("exit()\n");
+        return;
+    }
+    if (strstr(line, "break;"))
+    {
+        print_indent();
+        printf("break\n");
+        return;
+    }
+    if (strstr(line, "continue;"))
+    {
+        print_indent();
+        printf("continue\n");
+        return;
+    }
     // Convert printf to Python print()
     if (strstr(line, "printf"))
     {
@@ -260,36 +341,6 @@ void translate(char *line)
             print_indent();
             printf("print(\"%s\")\n", fmt);
         }
-        return;
-    }
-
-    // Convert return statements
-    if (strstr(line, "return "))
-    {
-        char value[50];
-        sscanf(line, "return %[^;];", value);
-        print_indent();
-        printf("return %s\n", value);
-        return;
-    }
-
-    // Convert exit(), break, and continue
-    if (strstr(line, "exit("))
-    {
-        print_indent();
-        printf("exit()\n");
-        return;
-    }
-    if (strstr(line, "break;"))
-    {
-        print_indent();
-        printf("break\n");
-        return;
-    }
-    if (strstr(line, "continue;"))
-    {
-        print_indent();
-        printf("continue\n");
         return;
     }
 
@@ -470,21 +521,21 @@ void translate(char *line)
 int main(int argc, char *argv[])
 {
     FILE *file = NULL;
-
+    /*
     // If a file is not provided
     if (argc < 2)
     {
         fprintf(stderr, "Usage: %s <input_file.c>\n", argv[0]);
         return 1;
     }
-
-    file = fopen(argv[1], "r");
+*/
+    file = fopen("example.c", "r");
     if (!file)
     {
         fprintf(stderr, "Error: Cannot open file %s\n", argv[1]);
         return 1;
     }
-
+    
     char line[1024];
     while (fgets(line, sizeof(line), file))
     {
