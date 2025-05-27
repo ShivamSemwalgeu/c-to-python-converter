@@ -521,15 +521,15 @@ void translate(char *line)
 int main(int argc, char *argv[])
 {
     FILE *file = NULL;
-    /*
+    
     // If a file is not provided
     if (argc < 2)
     {
         fprintf(stderr, "Usage: %s <input_file.c>\n", argv[0]);
         return 1;
     }
-*/
-    file = fopen("example.c", "r");
+
+    file = fopen(argv[1], "r");
     if (!file)
     {
         fprintf(stderr, "Error: Cannot open file %s\n", argv[1]);
